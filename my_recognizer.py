@@ -20,6 +20,29 @@ def recognize(models: dict, test_set: SinglesData):
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     probabilities = []
     guesses = []
-    # TODO implement the recognizer
-    # return probabilities, guesses
-    raise NotImplementedError
+    # DONE implement the recognizer
+    #
+    # Recognizer Implementation
+    # https://discussions.udacity.com/t/recognizer-implementation/234793
+
+    for (X, lengths) in test_set.get_all_Xlengths().values():
+        probability = {}
+        select_logL = float("-inf")
+        guess = None
+
+        for word, model in models.items():
+            try:
+                logL = model.score(X, lengths)
+                probability[word] = logL
+            except:
+                probability[word] = float("-inf")
+                # continue
+
+            if logL > select_logL:
+                select_logL = logL
+                guess = word
+
+        probabilities.append(probability)
+        guesses.append(guess)
+
+    return probabilities, guesses
