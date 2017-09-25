@@ -122,9 +122,29 @@ class SelectorDIC(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection based on DIC scores
-        raise NotImplementedError
+        # DONE implement model selection based on DIC scores
 
+        select_dic = float("-inf")
+        select_model = None
+        for n_components in range(self.min_n_components, self.max_n_components + 1):
+            try:
+                model = self.base_model(n_components)
+                logL = model.score(self.X, self.lengths)
+
+                # https://discussions.udacity.com/t/dic-score-calculation/238907/3
+                other_words = [self.hwords[word] for word in self.hwords if
+                               word != self.this_word]
+                anti_logsL = [model.score(X, length) for (X, length) in other_words]
+
+                # dic = math.log(P(X(i)) - 1/(M-1)*SUM(log(P(X(all but i))
+                dic = logL - sum(anti_logsL)/len(other_words)
+
+                if dic > select_dic:
+                    select_dic = dic
+                    select_model = model
+            except:
+                continue
+        return select_model
 
 class SelectorCV(ModelSelector):
     ''' select best model based on average log Likelihood of cross-validation folds
@@ -136,3 +156,6 @@ class SelectorCV(ModelSelector):
 
         # TODO implement model selection using CV
         raise NotImplementedError
+
+# Student results
+# https://discussions.udacity.com/t/verify-results-cv-bic-dic/247347/5
