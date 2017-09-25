@@ -76,8 +76,37 @@ class SelectorBIC(ModelSelector):
         """
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection based on BIC scores
-        raise NotImplementedError
+        # DONE implement model selection based on BIC scores
+
+        # Bayesian information criteria: BIC = −2 * log L + p * log N,
+        # where
+        #   • L is the likelihood of the fitted model,
+        #   • p is the number of parameters, and
+        #   • N is the number of data points.
+        # The term −2 log L decreases with increasing model complexity
+        # (more parameters), whereas the penalties 2p or p log N increase with
+        # increasing complexity. The BIC applies a larger penalty
+        # when N > e 2 = 7.4.
+        # Model selection: The lower the BIC value the better the model
+
+        select_bic = float("inf")
+        select_model = None
+        for n_components in range(self.min_n_components, self.max_n_components + 1):
+            try:
+                model = self.base_model(n_components)
+                logL = model.score(self.X, self.lengths)
+                # https://discussions.udacity.com/t/verifing-bic-calculation/246165/5
+                # https://discussions.udacity.com/t/number-of-parameters-bic-calculation/233235/17
+                p = n_components**2 + 2*n_components * model.n_features - 1
+                logN = math.log(sum(self.lengths))
+                bic = - 2 * logL + p * logN
+                if bic < select_bic:
+                    select_bic = bic
+                    select_model = model
+            except:
+                continue
+        return select_model
+
 
 
 class SelectorDIC(ModelSelector):
