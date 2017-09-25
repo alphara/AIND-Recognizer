@@ -159,22 +159,26 @@ class SelectorCV(ModelSelector):
         # http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.KFold.html
         # https://discussions.udacity.com/t/my-selector-classes/349846
 
-        split_method = KFold(n_splits=min(len(self.sequences), 3))
-
         select_avg_logL = float("-inf")
         select_model = None
         for n_components in range(self.min_n_components, self.max_n_components + 1):
             model = self.base_model(n_components)
             logsL = []
-            for train_index, test_index in split_method.split(self.sequences):
+            if len(self.sequences) == 1:
                 try:
-                    # train_X, train_lengths = combine_sequences(train_index, self.sequences)
-                    test_X, test_lengths = combine_sequences(test_index, self.sequences)
-                    # model = self.base_model(n_components)
-                    logL = model.score(test_X, test_lengths)
+                    logL = model.score(self.X, self.lengths)
                     logsL.append(logL)
                 except:
                     continue
+            else:
+                split_method = KFold(n_splits=min(len(self.sequences), 3))
+                for train_index, test_index in split_method.split(self.sequences):
+                    try:
+                        test_X, test_lengths = combine_sequences(test_index, self.sequences)
+                        logL = model.score(test_X, test_lengths)
+                        logsL.append(logL)
+                    except:
+                        continue
             if not logsL:
                 continue
             avg_logL = np.mean(logsL)
