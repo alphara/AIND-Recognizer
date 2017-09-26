@@ -162,10 +162,10 @@ class SelectorCV(ModelSelector):
         select_avg_logL = float("-inf")
         select_model = None
         for n_components in range(self.min_n_components, self.max_n_components + 1):
-            model = self.base_model(n_components)
             logsL = []
             if len(self.sequences) == 1:
                 try:
+                    model = self.base_model(n_components)
                     logL = model.score(self.X, self.lengths)
                     logsL.append(logL)
                 except:
@@ -174,7 +174,10 @@ class SelectorCV(ModelSelector):
                 split_method = KFold(n_splits=min(len(self.sequences), 3))
                 for train_index, test_index in split_method.split(self.sequences):
                     try:
+                        training_X, training_lengths = combine_sequences(train_index, self.sequences)
                         test_X, test_lengths = combine_sequences(test_index, self.sequences)
+                        model = GaussianHMM(n_components, covariance_type="diag", n_iter=1000,
+                                            random_state=self.random_state, verbose=False).fit(training_X, training_lengths)
                         logL = model.score(test_X, test_lengths)
                         logsL.append(logL)
                     except:
